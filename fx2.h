@@ -28,6 +28,7 @@
 #define EXP_RBF  -4
 #define EXP_CONF -5
 
+
 typedef unsigned char uchar;
 
 //
