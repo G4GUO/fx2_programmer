@@ -33,10 +33,11 @@ typedef unsigned char uchar;
 
 //
 void fx2_deinit(void);
-int  fx2_init( unsigned int cvid, unsigned int cpid, unsigned int nvid, unsigned int npid );
+int  fx2_init( const char *flash_file, unsigned int cvid, unsigned int cpid, unsigned int nvid, unsigned int npid );
 // Start the FX2 code running
 void fx2_run(void);
 int  fx2_i2c_bulk_transfer(int ep, unsigned char *b, int l );
 const char *fx2_result_message(void);
+int fx2_firmware_save_to_flash( const char *fx2_filename );
 
 #endif // FX2USB_H

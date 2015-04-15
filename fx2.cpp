@@ -233,13 +233,6 @@ int fx2_firmware_load(const char *fx2_filename)
     }
     return EXP_OK;
 }
-
-//////////////////////////////////////////////////////////////////////////
-//
-// Called when system is running
-//
-//////////////////////////////////////////////////////////////////////////
-
 //
 // Read and write to the flash memory
 //
@@ -287,6 +280,70 @@ void fx2_read_flash( int add, unsigned char *b, uchar len )
     fx2_i2c_bulk_transfer( EP1IN, msg, len+4);
     memcpy( b, &msg[4], len);
 }
+//
+// Save the FX2 Firmware to flash
+//
+int fx2_firmware_save_to_flash( const char *fx2_filename )
+{
+    FILE *fp;
+    if((fp=fopen(fx2_filename,"r"))!=NULL)
+    {
+        int line = 0;
+        const size_t buflen = 1024;
+        char buffer[buflen];
+        char *b;
+
+        while(fgets(buffer,buflen,fp))
+        {
+            if(feof(fp)) break;
+            line++;
+            b = buffer;
+            unsigned int nbytes=0,addr=0,type=0;
+            if(b[0] == ':')
+            {
+                b++;
+                sscanf(b,"%02x%04x%02x",&nbytes,&addr,&type);
+                b += 8;
+                unsigned int d;
+                unsigned char data[nbytes];
+                unsigned char chksum = nbytes+addr+(addr>>8)+type;
+                for( unsigned int i = 0; i < nbytes; i++ )
+                {
+                    sscanf(b,"%02x",&d);
+                    b += 2;
+                    data[i] = d;
+                    chksum += d;
+                }
+                unsigned int fchksum  = 0;
+                sscanf(b,"%02x",&fchksum);
+                if((chksum+fchksum)&0xFF)
+                {
+                    sprintf(m_error_text,"Express Firmware file CRC error");
+                }
+                else
+                {
+                   // Write to RAM
+                   fx2_write_flash( addr, data, nbytes );
+                   fx2_wait();
+                }
+            }
+        }
+        fclose(fp);
+    }
+    else
+    {
+        sprintf(m_error_text,"Express cannot find firmware file %s",fx2_filename);
+        return EXP_IHX;
+    }
+    return EXP_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Called when system is running
+//
+//////////////////////////////////////////////////////////////////////////
+
 const char *fx2_result_message(void)
 {
     return m_error_text;
@@ -302,7 +359,7 @@ void fx2_deinit(void)
     m_status = EXP_CONF;
 }
 
-int fx2_init( unsigned int cvid, unsigned int cpid, unsigned int nvid, unsigned int npid )
+int fx2_init( const char *flash_file, unsigned int cvid, unsigned int cpid, unsigned int nvid, unsigned int npid )
 {
     m_status = EXP_CONF;
     sprintf(m_error_text,"Success!");
@@ -346,8 +403,13 @@ int fx2_init( unsigned int cvid, unsigned int cpid, unsigned int nvid, unsigned 
    fx2_wait_long();
 
    memset(b,0,12);
+
+   if( strlen(flash_file) != 0 ) fx2_firmware_save_to_flash( flash_file );
+
    fx2_read_flash( 0x00, b, 8 );
    sprintf(m_error_text,"%.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x",b[0],b[1],b[2],b[3],b[4],b[5],b[6],b[7]);
+
+
    fx2_deinit();
 
     return m_status;

@@ -36,14 +36,20 @@ void MainWindow::on_pushButtonProgramVID_clicked()
 {
     // Update the VID
     bool r;
+    QString str;
     m_cvid = ui->lineEditCurrentVID->displayText().toInt( &r, 16);
     m_cpid = ui->lineEditCurrentPID->displayText().toInt( &r, 16);
     m_nvid = ui->lineEditNewVID->displayText().toInt( &r, 16);
     m_npid = ui->lineEditNewPID->displayText().toInt( &r, 16);
 
     ui->labelResult->setText("");
+    str = ui->lineEditFileToFlash->displayText();
 
-    fx2_init( m_cvid, m_cpid, m_nvid, m_npid );
+    if(str.length() == 0)
+        fx2_init( "", m_cvid, m_cpid, m_nvid, m_npid );
+    else
+        fx2_init( str.toLatin1(), m_cvid, m_cpid, m_nvid, m_npid );
+
 
     m_cvid = m_nvid;
     m_cpid = m_npid;
