@@ -39,11 +39,15 @@
 
 #ifdef ALLOCATE_EXTERN
 #define EXTERN
-#define _AT_(a) at a
+#define _AT_(a) __at a
 #else
 #define EXTERN extern
 #define _AT_ ;/ ## /
 #endif
+
+#define xdata __xdata
+#define at    __at
+#define sfr   __sfr
 
 typedef unsigned char BYTE;
 typedef unsigned short WORD;

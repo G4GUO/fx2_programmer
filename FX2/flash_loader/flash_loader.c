@@ -5,7 +5,7 @@
 // A single nop is sufficient for default setup but like that we're on 
 // the safe side. 
 //
-#define	NOP		_asm nop _endasm
+#define	NOP		__asm nop __endasm
 #define	SYNCDELAY	NOP; NOP; NOP; NOP; NOP; NOP; NOP; NOP
 
 #define SET_RESET_BIT (IOC |= 0x80)
